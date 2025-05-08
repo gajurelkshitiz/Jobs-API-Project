@@ -1,18 +1,26 @@
-const  { CustomAPIError }  = require('../errors')
-const { StatusCodes } = require('http-status-codes')
+const { StatusCodes } = require('http-status-codes');
+const  { CustomAPIError }  = require('../errors');
 
 const errorHandlerMiddleware = (err, req, res, next) => {
-    if (err instanceof CustomAPIError) {
-        return res
-            .status(err.statusCode)
-            .json({msg: err.message})
+
+    let CustomError = {
+        statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
+        msg: err.message || "Something went wrong, try again later !!!"
     }
-    else {
-        console.log(err)
-        return res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .json({msg: "Something Went Wrong!!! Error Occured."})
+    // if (err instanceof CustomAPIError) {
+    //     return res
+    //         .status(err.statusCode)
+    //         .json({msg: err.message})
+    // }
+    
+    if (err.code && err.code == 11000) {
+        CustomError.msg = `Duplicate value entered for ${Object.keys(err.keyValue)} field, choose another value`
+        CustomError.statusCode = 400
+
     }
+    // return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ err })
+    return res.status(CustomError.statusCode).json({ msg: CustomError.msg })
+
 }
 
-module.exports = errorHandlerMiddleware
+module.exports = errorHandlerMiddleware;
