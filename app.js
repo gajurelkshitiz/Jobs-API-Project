@@ -1,6 +1,12 @@
 require('dotenv').config()
 require('express-async-errors');
 
+// importing additional security packages 
+const helmet = require('helmet')
+const cors = require('cors')
+const xss = require('xss-clean')
+const rateLimiter = require('express-rate-limit')
+
 const express = require('express')
 const app = express();
 
@@ -19,7 +25,20 @@ const notFoundMiddleware = require("./middleware/not-found")
 const errorHandlerMiddleware = require('./middleware/error-handler')
 
 // useful middlewares for json body
+app.use(rateLimiter({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+        standardHeaders: 'draft-8', // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
+        legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+        // store: ... , // Redis, Memcached, etc. See below.
+    })
+)
+
 app.use(express.json())
+app.use(helmet())
+app.use(cors())
+app.use(xss())
+
 
 
 
